@@ -1,0 +1,469 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Angela's Bakery Game 🧁</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fdf6ec;
+      --warm-white: #fff9f2;
+      --caramel: #c8762a;
+      --caramel-light: #f4a261;
+      --brown: #6b3a1f;
+      --dark: #3b1f0a;
+      --pink: #f9c4c4;
+      --blush: #fce8e8;
+      --green: #7eaa74;
+      --shadow: 0 4px 24px rgba(107,58,31,0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      font-family: 'Lora', Georgia, serif;
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* Nav */
+    .site-nav {
+      background: #fff8f0;
+      border-bottom: 2px solid var(--caramel-light);
+      padding: 10px 20px;
+      display: flex;
+      gap: 16px;
+    }
+    .nav-link {
+      text-decoration: none;
+      font-family: 'Lora', Georgia, serif;
+      font-size: 1rem;
+      color: #c1440e;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: background 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--caramel-light);
+      color: #fff;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 52px 20px 28px;
+      background: linear-gradient(160deg, var(--blush) 0%, var(--cream) 60%);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "🥐🍰🧁🍩🥧🍪";
+      position: absolute;
+      top: 12px; left: 0; right: 0;
+      font-size: 1.6rem;
+      letter-spacing: 18px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      font-weight: 900;
+      color: var(--brown);
+      line-height: 1.1;
+      text-shadow: 2px 3px 0 #f9c4c488;
+    }
+    .hero p {
+      margin-top: 10px;
+      font-style: italic;
+      color: var(--caramel);
+      font-size: 1.05rem;
+    }
+
+    /* Score bar */
+    .score-bar {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      padding: 14px 20px;
+      background: var(--warm-white);
+      border-bottom: 1px solid #f0ddc8;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+    }
+    .score-bar span { color: var(--brown); }
+    .score-bar strong { color: var(--caramel); font-size: 1.2rem; }
+
+    /* Game area */
+    .game-wrap {
+      max-width: 680px;
+      margin: 36px auto;
+      padding: 0 18px 60px;
+    }
+
+    .card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 36px 36px 28px;
+      border: 1.5px solid #f0ddc8;
+      animation: fadeUp 0.35s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(18px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .question-num {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--caramel-light);
+      margin-bottom: 10px;
+    }
+
+    .question-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--brown);
+      line-height: 1.35;
+      margin-bottom: 28px;
+    }
+
+    .emoji-hint {
+      font-size: 2.8rem;
+      text-align: center;
+      margin-bottom: 22px;
+      display: block;
+      animation: wiggle 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes wiggle {
+      from { transform: rotate(-5deg) scale(1); }
+      to   { transform: rotate(5deg) scale(1.12); }
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 480px) { .options { grid-template-columns: 1fr; } }
+
+    .opt-btn {
+      background: var(--cream);
+      border: 2px solid #e8c9a0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-family: 'Lora', serif;
+      font-size: 0.98rem;
+      color: var(--dark);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.18s;
+      line-height: 1.4;
+    }
+    .opt-btn:hover:not(:disabled) {
+      background: var(--blush);
+      border-color: var(--caramel-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(200,118,42,0.15);
+    }
+    .opt-btn.correct {
+      background: #d4edda;
+      border-color: var(--green);
+      color: #2d6a27;
+      font-weight: 600;
+    }
+    .opt-btn.wrong {
+      background: #fde8e8;
+      border-color: #e07070;
+      color: #8b2020;
+    }
+    .opt-btn:disabled { cursor: default; }
+
+    .feedback {
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-style: italic;
+      font-size: 0.97rem;
+      display: none;
+    }
+    .feedback.show { display: block; animation: fadeUp 0.25s ease; }
+    .feedback.correct { background: #eaf6ea; color: #2d6a27; border-left: 4px solid var(--green); }
+    .feedback.wrong   { background: #fdf0f0; color: #7a2020; border-left: 4px solid #e07070; }
+
+    .next-btn {
+      display: block;
+      margin: 22px auto 0;
+      background: var(--caramel);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 13px 36px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.18s;
+      display: none;
+    }
+    .next-btn.show { display: block; animation: fadeUp 0.3s ease; }
+    .next-btn:hover { background: var(--brown); transform: scale(1.04); }
+
+    /* Result screen */
+    .result-card {
+      text-align: center;
+      padding: 48px 28px;
+    }
+    .result-emoji { font-size: 4rem; display: block; margin-bottom: 16px; }
+    .result-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--brown);
+      margin-bottom: 10px;
+    }
+    .result-card p { font-size: 1.05rem; color: #7a4f2a; margin-bottom: 6px; }
+    .result-score { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--caramel); font-weight: 900; margin: 10px 0; }
+    .play-again {
+      margin-top: 28px;
+      background: var(--caramel);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 14px 40px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .play-again:hover { background: var(--brown); }
+
+    /* Progress bar */
+    .progress-wrap { background: #f0ddc8; border-radius: 10px; height: 7px; margin-bottom: 26px; }
+    .progress-fill { background: linear-gradient(90deg, var(--caramel-light), var(--caramel)); height: 7px; border-radius: 10px; transition: width 0.4s ease; }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="nav-link">🏠 Home</a>
+  <a href="bakery-game.html" class="nav-link active">🧁 Bakery Game</a>
+</nav>
+
+<div class="hero">
+  <h1>Angela's Bakery Trivia 🎂</h1>
+  <p>How well do you know your baked goods?</p>
+</div>
+
+<div class="score-bar">
+  <span>Score: <strong id="score">0</strong></span>
+  <span>Question: <strong id="q-counter">1 / 10</strong></span>
+</div>
+
+<div class="game-wrap">
+  <div class="card" id="game-card">
+    <div class="question-num" id="q-num">Question 1 of 10</div>
+    <div class="progress-wrap"><div class="progress-fill" id="progress" style="width:10%"></div></div>
+    <span class="emoji-hint" id="emoji">🧁</span>
+    <div class="question-text" id="question">Loading...</div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn">Next Question →</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    emoji: "🥐",
+    q: "What country is the croissant originally from?",
+    opts: ["France", "Austria", "Italy", "Switzerland"],
+    answer: 1,
+    fact: "Croissants were actually invented in Austria (the kipferl), brought to France in the 19th century where they got their flaky, buttery upgrade!"
+  },
+  {
+    emoji: "🍰",
+    q: "Which ingredient gives red velvet cake its distinctive colour?",
+    opts: ["Beetroot", "Food dye + cocoa reaction", "Strawberries", "Cherry syrup"],
+    answer: 1,
+    fact: "Originally, the reddish hue came from a chemical reaction between natural cocoa, buttermilk, and vinegar. Modern versions use red food dye."
+  },
+  {
+    emoji: "🥖",
+    q: "What does 'sourdough' refer to?",
+    opts: ["Adding vinegar to dough", "Fermented wild-yeast starter", "Sour cream in the recipe", "Over-proofed bread"],
+    answer: 1,
+    fact: "Sourdough uses a live culture of wild yeast and bacteria — some bakeries keep their starter alive for decades (or even centuries)!"
+  },
+  {
+    emoji: "🍩",
+    q: "Why do donuts have holes?",
+    opts: ["To save on dough cost", "So the center cooks evenly", "A sailor requested it", "All of the above are claimed"],
+    answer: 3,
+    fact: "Multiple legends exist — the most famous involves sailor Hanson Gregory who claimed he punched the hole in 1847 so the center would fry properly."
+  },
+  {
+    emoji: "🧆",
+    q: "What is a 'laminated' dough?",
+    opts: ["Dough covered in plastic", "Dough with layers of butter folded in", "Gluten-free dough", "Dough baked twice"],
+    answer: 1,
+    fact: "Laminated dough (like for croissants and puff pastry) is made by folding butter into dough many times, creating hundreds of flaky layers."
+  },
+  {
+    emoji: "🎂",
+    q: "Dulce de leche cheesecake — what IS dulce de leche?",
+    opts: ["Chocolate caramel", "Sweetened condensed milk caramelised by heat", "A type of cream cheese", "Spanish butter"],
+    answer: 1,
+    fact: "Dulce de leche is made by slowly heating sweetened milk until it caramelises into a rich, spreadable golden sauce. Angela's favourite dessert!"
+  },
+  {
+    emoji: "🍪",
+    q: "What does 'biscuit' mean in French?",
+    opts: ["Little cake", "Twice-cooked", "Sweet bread", "Flour crisp"],
+    answer: 1,
+    fact: "'Biscuit' comes from the Latin 'bis coctus' — cooked twice. Original biscuits were baked twice to remove all moisture so they'd last on ships."
+  },
+  {
+    emoji: "🥧",
+    q: "What is the purpose of 'blind baking' a pie crust?",
+    opts: ["Baking without looking at it", "Pre-baking before adding filling", "Baking at very low temperature", "Covering the crust with foil"],
+    answer: 1,
+    fact: "Blind baking pre-cooks the shell before the filling goes in, preventing a soggy bottom — especially important for custard or no-bake fillings!"
+  },
+  {
+    emoji: "🍞",
+    q: "What is the Maillard reaction in baking?",
+    opts: ["How yeast makes bread rise", "The browning of sugars and proteins under heat", "Gluten network forming", "Steam creating crust"],
+    answer: 1,
+    fact: "The Maillard reaction is why baked goods turn beautifully golden-brown and develop complex flavours — it's a chemical reaction between amino acids and sugars."
+  },
+  {
+    emoji: "🧁",
+    q: "What's the difference between a cupcake and a muffin?",
+    opts: ["Size only", "Cupcakes have frosting; muffins are less sweet", "Muffins use oil, cupcakes use butter only", "They are identical"],
+    answer: 1,
+    fact: "Cupcakes are mini cakes — sweet, tender, frosted. Muffins are sturdier, less sweet quick-breads. You can eat a muffin for breakfast without judgment."
+  }
+];
+
+let current = 0, score = 0, answered = false;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+const shuffled = shuffle(questions);
+
+function load() {
+  answered = false;
+  const q = shuffled[current];
+  document.getElementById('q-num').textContent = `Question ${current+1} of ${shuffled.length}`;
+  document.getElementById('q-counter').textContent = `${current+1} / ${shuffled.length}`;
+  document.getElementById('progress').style.width = `${((current+1)/shuffled.length)*100}%`;
+  document.getElementById('emoji').textContent = q.emoji;
+  document.getElementById('question').textContent = q.q;
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+  const nb = document.getElementById('next-btn');
+  nb.className = 'next-btn';
+
+  const container = document.getElementById('options');
+  container.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.onclick = () => pick(i, q);
+    container.appendChild(btn);
+  });
+}
+
+function pick(i, q) {
+  if (answered) return;
+  answered = true;
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedback');
+  const nb = document.getElementById('next-btn');
+
+  if (i === q.answer) {
+    score++;
+    document.getElementById('score').textContent = score;
+    btns[i].classList.add('correct');
+    fb.className = 'feedback correct show';
+    fb.textContent = '✅ Correct! ' + q.fact;
+  } else {
+    btns[i].classList.add('wrong');
+    btns[q.answer].classList.add('correct');
+    fb.className = 'feedback wrong show';
+    fb.textContent = '❌ Not quite! ' + q.fact;
+  }
+
+  if (current + 1 < shuffled.length) {
+    nb.textContent = 'Next Question →';
+  } else {
+    nb.textContent = 'See My Results 🎂';
+  }
+  nb.className = 'next-btn show';
+}
+
+document.getElementById('next-btn').onclick = () => {
+  current++;
+  if (current < shuffled.length) {
+    document.getElementById('game-card').style.animation = 'none';
+    void document.getElementById('game-card').offsetWidth;
+    document.getElementById('game-card').style.animation = '';
+    load();
+  } else {
+    showResult();
+  }
+};
+
+function showResult() {
+  const pct = score / shuffled.length;
+  let emoji, title, msg;
+  if (pct === 1)       { emoji='🏆'; title='Perfect Score!'; msg='You are a true bakery connoisseur. Angela approves.'; }
+  else if (pct >= 0.7) { emoji='🎂'; title='Great Job!'; msg='You clearly know your way around a bakery. Impressive!'; }
+  else if (pct >= 0.4) { emoji='🧁'; title='Not Bad!'; msg='A solid attempt. Time to bake more and brush up!'; }
+  else                 { emoji='🥐'; title='Keep Practicing!'; msg="The oven needs more time. Try again — you'll get there!"; }
+
+  document.getElementById('game-card').innerHTML = `
+    <div class="result-card">
+      <span class="result-emoji">${emoji}</span>
+      <h2>${title}</h2>
+      <div class="result-score">${score} / ${shuffled.length}</div>
+      <p>${msg}</p>
+      <p style="margin-top:8px; font-size:0.9rem; color:#b07040;">Angela's favourite dessert is cheesecake — did you know that? 🍰</p>
+      <button class="play-again" onclick="restart()">Play Again 🔁</button>
+    </div>
+  `;
+}
+
+function restart() {
+  current = 0; score = 0;
+  document.getElementById('score').textContent = 0;
+  shuffled.sort(() => Math.random() - 0.5);
+  document.getElementById('game-card').innerHTML = `
+    <div class="question-num" id="q-num">Question 1 of 10</div>
+    <div class="progress-wrap"><div class="progress-fill" id="progress" style="width:10%"></div></div>
+    <span class="emoji-hint" id="emoji">🧁</span>
+    <div class="question-text" id="question">Loading...</div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn">Next Question →</button>
+  `;
+  document.getElementById('next-btn').onclick = () => {
+    current++;
+    if (current < shuffled.length) { load(); }
+    else { showResult(); }
+  };
+  load();
+}
+
+load();
+</script>
+</body>
+</html>
